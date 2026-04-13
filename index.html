@@ -241,37 +241,7 @@ body{font-family:var(--font);color:var(--text);
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-logo">
-    <!-- Nardi Compressori SVG Logo (from image 2, no OIL-FREE) -->
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 112" height="36" style="display:block">
-      <!-- Outer rounded rectangle -->
-      <rect x="2.5" y="2.5" width="455" height="107" rx="12" ry="12"
-            fill="#fff" stroke="#2d2d2d" stroke-width="5.5"/>
-      <!-- Diamond (dark fill) -->
-      <polygon points="66,6 116,56 66,106 16,56" fill="#2d2d2d"/>
-      <!-- Diamond inner border -->
-      <polygon points="66,11 111,56 66,101 21,56" fill="none" stroke="#666" stroke-width="1.5"/>
-      <!-- N monogram (white) -->
-      <rect x="23" y="19" width="9" height="74" fill="#fff" rx="1"/>
-      <polygon points="23,19 32,19 67,93 58,93" fill="#fff"/>
-      <rect x="58" y="19" width="9" height="74" fill="#fff" rx="1"/>
-      <!-- G monogram (white, overlapping N right side) -->
-      <rect x="43" y="36" width="30" height="7" fill="#fff" rx="1"/>
-      <rect x="43" y="36" width="7" height="52" fill="#fff" rx="1"/>
-      <rect x="43" y="81" width="30" height="7" fill="#fff" rx="1"/>
-      <rect x="60" y="58" width="13" height="7" fill="#fff" rx="1"/>
-      <rect x="66" y="58" width="7" height="30" fill="#fff" rx="1"/>
-      <!-- NARDI text -->
-      <text x="133" y="88"
-            font-family="Impact,'Arial Narrow',Arial,sans-serif"
-            font-size="80" font-weight="900" fill="#2d2d2d">NARDI</text>
-      <!-- Red trapezoid cap on A (2nd letter) -->
-      <!-- Impact: N≈52px → A starts x≈185, center≈211, ends≈239 -->
-      <polygon points="191,6 229,6 244,40 176,40" fill="#8B2525"/>
-      <!-- COMPRESSORI -->
-      <text x="133" y="108"
-            font-family="Impact,'Arial Narrow',Arial,sans-serif"
-            font-size="21" font-weight="700" fill="#2d2d2d" letter-spacing="4">COMPRESSORI</text>
-    </svg>
+    <img src="logo.png" alt="Nardi Compressori" height="36" style="display:block">
   </div>
   <div class="hdr-title">
     <h1 id="hdr-t">CALCOLATORE PUNTO DI RUGIADA</h1>
@@ -740,18 +710,76 @@ cv.addEventListener('mouseup',e=>{
   drag.on=false;if(lastR)render();
 });
 cv.addEventListener('mouseleave',()=>{drag.on=false;hX=null;document.getElementById('tip').style.opacity='0';if(lastR)render();});
-cv.addEventListener('touchstart',e=>{e.preventDefault();const x=getX(e);drag={on:true,sx:x,cx:x};},{passive:false});
-cv.addEventListener('touchmove',e=>{e.preventDefault();if(drag.on){drag.cx=getX(e);render();}},{passive:false});
+/* ══ TOUCH (mobile): single=cursore, pinch=zoom ══ */
+let pinch={on:false,d0:0,cx:0,vr0:null};
+function tDist(e){
+  const dx=e.touches[0].clientX-e.touches[1].clientX;
+  const dy=e.touches[0].clientY-e.touches[1].clientY;
+  return Math.sqrt(dx*dx+dy*dy);
+}
+function tMidX(e){
+  const r=cv.getBoundingClientRect();
+  return((e.touches[0].clientX+e.touches[1].clientX)/2-r.left);
+}
+cv.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  if(e.touches.length===2){
+    // Inizio pinch
+    pinch.on=true;
+    pinch.d0=tDist(e);
+    pinch.cx=tMidX(e);
+    const vr=getVR();
+    pinch.vr0={xMin:vr.xMin,xMax:vr.xMax};
+    drag.on=false;hX=null;
+  }else{
+    // Tocco singolo: mostra cursore
+    pinch.on=false;
+    const x=getX(e);
+    hX=(x>=PAD.l&&x<=CW-PAD.r)?x:null;
+    drag.on=false;
+    if(lastR)render();
+  }
+},{passive:false});
+
+cv.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(e.touches.length===2&&pinch.on){
+    // Pinch zoom sull'asse X
+    const d=tDist(e);
+    const scale=pinch.d0/d;
+    const vr0=pinch.vr0;
+    const pw=CW-PAD.l-PAD.r;
+    const frac=Math.max(0,Math.min(1,(pinch.cx-PAD.l)/pw));
+    const cxData=vr0.xMin+frac*(vr0.xMax-vr0.xMin);
+    const range0=vr0.xMax-vr0.xMin;
+    const fullRange=units==='imperial'?b2p(500):500;
+    const newRange=Math.min(Math.max(range0*scale,5),fullRange);
+    let newMin=cxData-frac*newRange;
+    let newMax=newMin+newRange;
+    if(newMin<0){newMax-=newMin;newMin=0;}
+    if(newMax>fullRange){newMin-=(newMax-fullRange);newMax=fullRange;newMin=Math.max(0,newMin);}
+    zX={min:newMin,max:newMax};
+    document.getElementById('zRst').style.display='block';
+    if(lastR)render();
+  }else if(e.touches.length===1&&!pinch.on){
+    // Tocco singolo in movimento: aggiorna cursore
+    const x=getX(e);
+    hX=(x>=PAD.l&&x<=CW-PAD.r)?x:null;
+    if(lastR)render();
+  }
+},{passive:false});
+
 cv.addEventListener('touchend',e=>{
   e.preventDefault();
-  if(Math.abs(drag.cx-drag.sx)>10&&lastR){
-    const vr=getVR(),pw=CW-PAD.l-PAD.r;
-    const x1=Math.min(drag.sx,drag.cx),x2=Math.max(drag.sx,drag.cx);
-    zX={min:Math.max(0,(x1-PAD.l)/pw*(vr.xMax-vr.xMin)+vr.xMin),
-         max:(x2-PAD.l)/pw*(vr.xMax-vr.xMin)+vr.xMin};
-    document.getElementById('zRst').style.display='block';
+  if(e.touches.length<2)pinch.on=false;
+  if(e.touches.length===0){
+    hX=null;drag.on=false;
+    if(lastR)render();
+  }else if(e.touches.length===1){
+    const x=getX(e);
+    hX=(x>=PAD.l&&x<=CW-PAD.r)?x:null;
+    if(lastR)render();
   }
-  drag.on=false;if(lastR)render();
 },{passive:false});
 function resetZoom(){zX={min:null,max:null};document.getElementById('zRst').style.display='none';if(lastR)render();}
 window.addEventListener('resize',()=>resize());
