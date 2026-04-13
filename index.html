@@ -182,18 +182,27 @@ body{font-family:var(--font);color:var(--text);
   .left{width:100%;border-right:none;border-bottom:1px solid var(--bdr2);
     flex-direction:row;flex-wrap:wrap;overflow:visible}
   .panel-lbl{width:100%}
-  .inp-grp{flex:1;min-width:160px;border-bottom:none;
+  .inp-grp{flex:1;min-width:0;border-bottom:none;
     border-right:1px solid var(--bdr2)}
   .inp-grp:last-child{border-right:none}
+  .inp-hint{display:none}
   .right{flex:none;padding:6px;gap:5px;overflow:visible;height:auto}
   .chart-card{flex:none;height:240px}
-  .tbl-card{overflow-x:auto}
-  .hdr-title p{display:none}
-  .hdr-title h1{font-size:.75rem;letter-spacing:.1em}
-  .lang-btn{min-width:80px;font-size:.68rem;padding:3px 6px}
+  .tbl-card{overflow-x:visible}
+  .res-tbl{white-space:normal;width:100%}
+  .res-tbl thead{display:none}
+  .res-tbl tr{display:grid;grid-template-columns:1fr 1fr;
+    border-bottom:2px solid var(--bdr2);padding:2px 0}
+  .res-tbl td{border:none;padding:3px 6px}
+  .tnote{display:none}
+  .hdr-title{display:none}
+  .lang-btn{min-width:44px;font-size:.68rem;padding:3px 6px}
+  .lang-btn .lname{display:none}
   .unit-btn{padding:3px 9px;font-size:.67rem}
   .hdr{height:44px}
   .hdr-logo svg{height:30px}
+  .inp-grp label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .left{align-items:stretch}
   .zoom-hint{display:none}
 }
 @media(max-width:380px){
@@ -201,6 +210,29 @@ body{font-family:var(--font);color:var(--text);
   .lang-btn{min-width:60px}
   .lang-btn .lname{display:none}
   .unit-btn{padding:3px 7px}
+}
+
+/* ══════════════════════════════════
+   TABLET  (641px – 900px)
+══════════════════════════════════ */
+@media(min-width:641px) and (max-width:900px){
+  body{overflow-y:auto;overflow-x:hidden}
+  .app-wrap{flex-direction:column;overflow:visible}
+  .left{
+    width:100%;border-right:none;border-bottom:1px solid var(--bdr2);
+    flex-direction:row;flex-wrap:wrap;overflow:visible
+  }
+  .panel-lbl{width:100%}
+  .inp-grp{
+    flex:1;min-width:180px;border-bottom:none;
+    border-right:1px solid var(--bdr2)
+  }
+  .inp-grp:last-child{border-right:none}
+  .right{flex:none;padding:8px;gap:7px;overflow:visible;height:auto}
+  .chart-card{flex:none;height:340px}
+  .tbl-card{overflow-x:auto}
+  .zoom-hint{font-size:.55rem}
+  .hdr-title p{font-size:.55rem}
 }
 </style>
 </head>
